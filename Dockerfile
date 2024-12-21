@@ -1,5 +1,5 @@
 # Вибір базового образу
-FROM python:3.10-slim
+FROM python:3.10
 
 # Встановлення залежностей
 RUN pip install pymongo

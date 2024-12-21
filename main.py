@@ -10,16 +10,16 @@ from pymongo import MongoClient
 SOCKET_SERVER_HOST = '0.0.0.0'
 SOCKET_SERVER_PORT = 5000
 HTTP_SERVER_PORT = 3000
-MONGO_URI = 'mongodb+srv://sizovanton:SZnLeadlQNFIGIAd@cluster0.aclvi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/messages'
+MONGO_URI = 'mongodb://mongo:27017/'
 DATABASE_NAME = 'webapp'
 COLLECTION_NAME = 'messages'
 
 # HTTP-сервер
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/' or self.path == '/index':
+        if self.path == '/' or self.path == '/index.html':
             self.serve_file('templates/index.html', 'text/html')
-        elif self.path == '/message':
+        elif self.path == '/message.html':
             self.serve_file('templates/message.html', 'text/html')
         elif self.path.startswith('/static/'):
             self.serve_static_file()
@@ -37,7 +37,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
             # Перенаправлення на головну сторінку
             self.send_response(302)
-            self.send_header('Location', '/')
+            self.send_header('Location', '/index.html')
             self.end_headers()
         else:
             self.serve_file('templates/error.html', 'text/html', 404)
@@ -61,12 +61,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.serve_file('templates/error.html', 'text/html', 404)
 
     def send_to_socket_server(self, data):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((SOCKET_SERVER_HOST, SOCKET_SERVER_PORT))
-                sock.sendall(str(data).encode('utf-8'))
-        except Exception as e:
-            print(f"Помилка під час відправки даних до сокет-сервера: {e}")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((SOCKET_SERVER_HOST, SOCKET_SERVER_PORT))
+            sock.sendall(str(data).encode('utf-8'))
 
 
 def run_http_server():
@@ -112,3 +109,4 @@ if __name__ == '__main__':
 
     http_process.join()
     socket_process.join()
+
