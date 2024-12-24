@@ -1,4 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import logging
 import os
 import socket
 import urllib.parse
@@ -75,10 +76,16 @@ def run_http_server():
 # Socket-сервер
 def save_to_database(data):
     client = MongoClient(MONGO_URI)
-    db = client[DATABASE_NAME]
-    collection = db[COLLECTION_NAME]
-    collection.insert_one(data)
-    client.close()
+    db = client.webapp
+    collection = db.messages
+    try:
+        collection.insert_one(data)
+    except ValueError as err:
+        logging.error(f'Failed to parse data: {err}')
+    except Exception as err:
+        logging.error(f'Failed to write or read data: {err}')
+    finally:
+        client.close()
 
 
 def run_socket_server():
@@ -92,7 +99,7 @@ def run_socket_server():
         print(f"Отримано з'єднання від {client_address}")
         data = client_socket.recv(1024)
         if data:
-            message = eval(data.decode('utf-8'))  # Конвертуємо байти в словник
+            message = eval(data.decode('utf-8'))
             message['date'] = datetime.now()
             save_to_database(message)
             print(f"Збережено повідомлення: {message}")
@@ -109,4 +116,3 @@ if __name__ == '__main__':
 
     http_process.join()
     socket_process.join()
-
